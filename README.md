@@ -5,7 +5,7 @@ This repository provides the code for the method in our paper '**Text-Semantics 
 ## Overview
 
 <p align="center">
-  <img src="images/TSFDNet.png" width="800">
+  <img src="TSFDNet.png" width="800">
 </p>
 
 **TS-FDNet** is a multimodal, frequency-decoupled deep learning network tailored for remote sensing semantic change detection (SCD). By separating feature frequencies and injecting text-semantic priors, the network successfully suppresses global pseudo-changes and resolves category confusion under complex environmental variations.
