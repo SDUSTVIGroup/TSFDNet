@@ -43,7 +43,4 @@ Split the SCD data into training, validation and testing (if available) set and 
     
 The pretrained weights can be accessed at “Link:
 
-## Cite TS-FDNet
-
-If you find this work useful or interesting, please consider citing the following BibTeX entry.
 
