@@ -37,7 +37,7 @@ Split the SCD data into training, validation and testing (if available) set and 
 >    - label1
 >    - label2
     
-The pretrained weights can be accessed at “Link:[Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (提取码: `gypx`)
+The pretrained weights can be accessed at “Link: [Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (提取码: `gypx`)
 
 ## Train
 ```bash
