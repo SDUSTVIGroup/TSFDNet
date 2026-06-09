@@ -1,6 +1,6 @@
 # TS-FDNet
 
-This repository provides the code for the method in our paper '**Text-Semantics Guided Frequency-Decoupled Network for Semantic Change Detection**'. **IEEE Transactions on Geoscience and Remote Sensing (TGRS), 2026**
+This repository provides the code for the method in our paper '**Text-Semantics Guided Frequency-Decoupled Network for Semantic Change Detection**'. 
 
 ## Overview
 
