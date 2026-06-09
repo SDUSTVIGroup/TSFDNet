@@ -66,7 +66,7 @@ python train_TSFDNet.py
   <img src="image/Visual Comparison on the JL1 Dataset.png" width="800">
 </p>
 
-- **Results of the ablation study**
+- **Results of the Ablation Study**
 
 <p align="center">
   <img src="image/Ablation Study.png" width="600">
