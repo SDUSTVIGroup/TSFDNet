@@ -16,10 +16,6 @@ The framework primarily advances SCD through three core phases and modules:
 - **Wavelet Frequency Decomposition (WFD) Module**: Decouples bi-temporal features into high- and low-frequency components via 2D Discrete Wavelet Transform (DWT). The **low-frequency branch** captures global structural context and long-range dependencies using four-directional Mamba scanning, while the **high-frequency branch** employs Deformable Convolutions (DCN) to adapt to irregular local geometric variations.
 - **Bidirectional Synergistic Decoding (SGSE & CGSA)**: Establishes a bidirectional semantic-change refinement mechanism. It contains the **Semantic-Guided Spatial Enhancement (SGSE)** module and the **Change-Guided Semantic Attention (CGSA)** module, enabling mutual optimization and joint enhancement of change localization and semantic recognition.
 
-## Checkpoints
-
-For readers to easily evaluate the accuracy, we provide the trained weights:
-
 ## Data preparation
 
 Split the SCD data into training, validation and testing (if available) set and organize them as follows:
@@ -43,4 +39,37 @@ Split the SCD data into training, validation and testing (if available) set and 
     
 The pretrained weights can be accessed at “Link:
 
+## Train
+```bash
+python train_TSFDNet.py 
+```
 
+## Checkpoint
+
+- **TS-FDNet checkpoint**：
+
+## Results
+
+<p align="center">
+  <img src="TSFDNet.png" width="800">
+</p>
+
+## Visual Comparison on the SECOND Dataset
+
+<p align="center">
+  <img src="TSFDNet.png" width="800">
+</p>
+
+## Visual Comparison on the JL1 Dataset
+
+<p align="center">
+  <img src="TSFDNet.png" width="800">
+</p>
+
+## Results of the ablation study
+
+<p align="center">
+  <img src="TSFDNet.png" width="800">
+</p>
+
+## Acknowledgement
