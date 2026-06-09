@@ -51,7 +51,7 @@ python train_TSFDNet.py
 ## Results
 
 <p align="center">
-  <img src="TSFDNet.png" width="800">
+  <img src="image/Quantitative Comparison Results.png" width="800">
 </p>
 
 - **Visual Comparison on the SECOND Dataset**
@@ -69,7 +69,7 @@ python train_TSFDNet.py
 - **Results of the ablation study**
 
 <p align="center">
-  <img src="image/Ablation Study.png" width="800">
+  <img src="image/Ablation Study.png" >
 </p>
 
 ## Acknowledgement
