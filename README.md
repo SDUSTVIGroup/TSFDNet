@@ -46,7 +46,7 @@ python train_TSFDNet.py
 
 ## Checkpoint
 
-- **TS-FDNet checkpoint**：
+- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1sW-WgOfNvPb3HVh4LSOtwA?pwd=rprp)(提取码: `rprp`)
 
 ## Results
 
