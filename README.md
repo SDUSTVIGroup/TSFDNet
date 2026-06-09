@@ -63,13 +63,13 @@ python train_TSFDNet.py
 - **Visual Comparison on the JL1 Dataset**
 
 <p align="center">
-  <img src=""image/Visual Comparison on the JL1 Dataset.png" width="800">
+  <img src="image/Visual Comparison on the JL1 Dataset.png" width="800">
 </p>
 
 - **Results of the ablation study**
 
 <p align="center">
-  <img src="image/Ablation Study.png" >
+  <img src="image/Ablation Study.png" width="600">
 </p>
 
 ## Acknowledgement
