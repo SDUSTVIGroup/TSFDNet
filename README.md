@@ -46,25 +46,13 @@ python train_TSFDNet.py
 ## Results
 
 <p align="center">
-  <img src="image/Quantitative Comparison Results.png" width="800">
+  <img src="image/Quantitative Comparison Results on the SECOND Dataset.png" width="800">
 </p>
 
-- **Visual Comparison on the SECOND Dataset**
 
 <p align="center">
-  <img src="image/Visual Comparison on the SECOND Dataset.png" width="800">
+  <img src="image/Quantitative Comparison Results on the JL1 and Landsat-SCD Datasets.png" width="800">
 </p>
 
-- **Visual Comparison on the JL1 Dataset**
-
-<p align="center">
-  <img src="image/Visual Comparison on the JL1 Dataset.png" width="800">
-</p>
-
-- **Results of the Ablation Study**
-
-<p align="center">
-  <img src="image/Ablation Study.png" width="600">
-</p>
 
 ## Acknowledgement
