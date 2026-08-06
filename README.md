@@ -12,7 +12,7 @@ This repository provides the code for the method in our paper '**Text-Semantics 
 
 
 
-### 1. Environment setup
+## Environment setup
 
 TS-FDNet requires a CUDA-enabled GPU. Create a Python environment, install a PyTorch/torchvision build compatible with your CUDA version, and then install the remaining dependencies:
 
