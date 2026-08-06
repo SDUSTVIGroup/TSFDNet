@@ -68,8 +68,8 @@ def read_RSimages(mode, rescale=False):
     #assert mode in ['train', 'val', 'test']
     img_A_dir = os.path.join(root, mode, 'im1')
     img_B_dir = os.path.join(root, mode, 'im2')
-    label_A_dir = os.path.join(root, mode, 'label1_gray')
-    label_B_dir = os.path.join(root, mode, 'label2_gray')
+    label_A_dir = os.path.join(root, mode, 'label1')
+    label_B_dir = os.path.join(root, mode, 'label2')
     # To use rgb labels:
     #label_A_dir = os.path.join(root, mode, 'label1_rgb')
     #label_B_dir = os.path.join(root, mode, 'label2_rgb')
