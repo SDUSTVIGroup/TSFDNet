@@ -72,7 +72,7 @@ TSFDNet/
     |-- backbone_weights.pth
     `-- RemoteCLIP-ViT-B-32.pt
 ```
-Put `backbone_weights.pth` in line 3 of `train_TSFDNet.py`, like this:
+Put `backbone_weights.pth` in line 49 of `train_TSFDNet.py`, like this:
 
 ```python
 # In the existing args dictionary:
