@@ -61,10 +61,33 @@ Set the dataset root in `datasets/RS_SECOND.py`:
 root = 'your dataset'
 ```
 
-The pretrained weights can be accessed at “Link: [Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (提取码: `gypx`)
-
 
 ## Train
+
+Download the pretrained weights from “Link: [Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (extraction code: `gypx`) and place them under the repository's `pretrained/` directory:
+
+```text
+TSFDNet/
+`-- pretrained/
+    |-- backbone_weights.pth
+    `-- RemoteCLIP-ViT-B-32.pt
+```
+Place the two weight paths in the corresponding locations in `train_TSFDNet.py` as shown below：
+
+```python
+# In the existing args dictionary:
+'load_path': "···/pretrained/backbone_weights.pth",
+```
+
+
+Select an available GPU near the top of `train_TSFDNet.py`, for example:
+
+```python
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+```
+
+Run the command from the repository root:
+
 ```bash
 python train_TSFDNet.py 
 ```
