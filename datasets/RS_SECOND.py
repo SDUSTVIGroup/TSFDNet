@@ -66,8 +66,8 @@ def normalize_images(imgs, time='A'):
 def read_RSimages(mode, rescale=False):
     img_A_dir = os.path.join(root, mode, 'im1')
     img_B_dir = os.path.join(root, mode, 'im2')
-    label_A_dir = os.path.join(root, mode, 'label1_idx')
-    label_B_dir = os.path.join(root, mode, 'label2_idx')
+    label_A_dir = os.path.join(root, mode, 'label1')
+    label_B_dir = os.path.join(root, mode, 'label2')
     # To use rgb labels:
     #label_A_dir = os.path.join(root, mode, 'label1_rgb')
     #label_B_dir = os.path.join(root, mode, 'label2_rgb')
