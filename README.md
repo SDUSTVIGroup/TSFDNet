@@ -8,13 +8,8 @@ This repository provides the code for the method in our paper '**Text-Semantics 
   <img src="image/Overview.png" width="800">
 </p>
 
-**TS-FDNet** is a multimodal, frequency-decoupled deep learning network tailored for remote sensing semantic change detection (SCD). By separating feature frequencies and injecting text-semantic priors, the network successfully suppresses global pseudo-changes and resolves category confusion under complex environmental variations.
+**TS-FDNet** is a multimodal, frequency-decoupled deep learning network tailored for remote sensing semantic change detection (SCD). By separating feature frequencies and injecting text-semantic priors, the network successfully suppresses global pseudo-changes and resolves category confusion under complex environmental variations.Specifically, bi-temporal images are first encoded into multi-scale visual features, which are enhanced at high decoder layers. The WFD module then decouples low-frequency global structures and high-frequency local details, which are modeled by Mamba and deformable convolutions, respectively. Finally, bidirectional change-semantic feedback jointly refines change localization and bi-temporal semantic predictions.
 
-The framework primarily advances SCD through three core phases and modules:
-
-- **CLIP-Guided Text Feature Injection Module**: Introduces category-level text semantic priors (dynamically optimized via Context Optimization, CoOp) into high-level bi-temporal visual features. It utilizes spatial- and channel-wise dual-path attention to enhance semantic discriminability and reduce visual ambiguity.
-- **Wavelet Frequency Decomposition (WFD) Module**: Decouples bi-temporal features into high- and low-frequency components via 2D Discrete Wavelet Transform (DWT). The **low-frequency branch** captures global structural context and long-range dependencies using four-directional Mamba scanning, while the **high-frequency branch** employs Deformable Convolutions (DCN) to adapt to irregular local geometric variations.
-- **Bidirectional Synergistic Decoding (SGSE & CGSA)**: Establishes a bidirectional semantic-change refinement mechanism. It contains the **Semantic-Guided Spatial Enhancement (SGSE)** module and the **Change-Guided Semantic Attention (CGSA)** module, enabling mutual optimization and joint enhancement of change localization and semantic recognition.
 
 ## Data preparation
 
