@@ -101,6 +101,25 @@ python train_TSFDNet.py
 
 - **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1sW-WgOfNvPb3HVh4LSOtwA?pwd=rprp) (提取码: `rprp`)
 
+## Inference
+
+Put the test-set path in line 26 of `inference.py`, like this:
+
+```python
+parser.add_argument('--test_dir', default='.../SECOND/test')
+```
+
+Put the downloaded checkpoint path in line 27 of `inference.py`, like this:
+
+```python
+parser.add_argument('--chkpt_path', default='.../checkpoints/best.pth')
+
+Run inference from the repository root:
+
+```bash
+python inference.py
+```
+
 ## Results
 
 <p align="center">
