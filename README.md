@@ -72,13 +72,18 @@ TSFDNet/
     |-- backbone_weights.pth
     `-- RemoteCLIP-ViT-B-32.pt
 ```
-Place the two weight paths in the corresponding locations in `train_TSFDNet.py` as shown below：
+Put `backbone_weights.pth` in line 3 of `train_TSFDNet.py`, like this:
 
 ```python
 # In the existing args dictionary:
 'load_path': "···/pretrained/backbone_weights.pth",
 ```
 
+Place `RemoteCLIP-ViT-B-32.pt` at line 906 in `models/TSFDNet.py`, like this:
+
+```python
+clip_head_path='···/pretrained/RemoteCLIP-ViT-B-32.pt'
+```
 
 Select an available GPU near the top of `train_TSFDNet.py`, for example:
 
