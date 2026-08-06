@@ -113,6 +113,7 @@ Put the downloaded checkpoint path in line 27 of `inference.py`, like this:
 
 ```python
 parser.add_argument('--chkpt_path', default='.../checkpoints/best.pth')
+```
 
 Run inference from the repository root:
 
