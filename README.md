@@ -34,9 +34,9 @@ pip install git+https://github.com/openai/CLIP.git
 
 ## Data preparation
 
-Split the SCD data into training, validation and testing (if available) set and organize them as follows:
+Taking training the SECOND dataset as an example, split the SCD data into training, validation and testing (if available) set and organize them as follows:
 
->YOUR_DATA_DIR
+>SECOND
 >  - train
 >    - im1
 >    - im2
@@ -53,6 +53,14 @@ Split the SCD data into training, validation and testing (if available) set and 
 >    - label1
 >    - label2
     
+If the downloaded SECOND annotations are RGB color masks, either convert them to single-channel index masks before training or enable `Color2Index` in `datasets/RS_SECOND.py` for both `label1` and `label2`.
+
+Set the dataset root in `datasets/RS_SECOND.py`:
+
+```python
+root = 'your dataset'
+```
+
 The pretrained weights can be accessed at “Link: [Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (提取码: `gypx`)
 
 
