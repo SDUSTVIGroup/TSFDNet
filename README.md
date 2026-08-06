@@ -11,28 +11,50 @@ This repository provides the code for the method in our paper '**Text-Semantics 
 **TS-FDNet** is a multimodal, frequency-decoupled deep learning network tailored for remote sensing semantic change detection (SCD). By separating feature frequencies and injecting text-semantic priors, the network successfully suppresses global pseudo-changes and resolves category confusion under complex environmental variations.Specifically, bi-temporal images are first encoded into multi-scale visual features, which are enhanced at high decoder layers. The WFD module then decouples low-frequency global structures and high-frequency local details, which are modeled by Mamba and deformable convolutions, respectively. Finally, bidirectional change-semantic feedback jointly refines change localization and bi-temporal semantic predictions.
 
 
+
+### 1. Environment setup
+
+TS-FDNet requires a CUDA-enabled GPU. Create a Python environment, install a PyTorch/torchvision build compatible with your CUDA version, and then install the remaining dependencies:
+
+```bash
+git clone https://github.com/SDUSTVIGroup/TSFDNet.git
+cd TSFDNet
+
+conda create -n tsfdnet python=3.10 -y
+conda activate tsfdnet
+
+# Install PyTorch and torchvision according to your CUDA version:
+# https://pytorch.org/get-started/locally/
+
+pip install numpy scipy scikit-image matplotlib opencv-python tensorboard tensorboardX timm
+pip install causal-conv1d mamba-ssm
+pip install git+https://github.com/openai/CLIP.git
+```
+
+
 ## Data preparation
 
 Split the SCD data into training, validation and testing (if available) set and organize them as follows:
 
 >YOUR_DATA_DIR
->  - Train
+>  - train
 >    - im1
 >    - im2
 >    - label1
 >    - label2
->  - Val
+>  - val
 >    - im1
 >    - im2
 >    - label1
 >    - label2
->  - Test
+>  - test
 >    - im1
 >    - im2
 >    - label1
 >    - label2
     
 The pretrained weights can be accessed at “Link: [Baidu Netdisk](https://pan.baidu.com/s/1t-Gu3oO1pqJggPxjVbSPfA?pwd=gypx) (提取码: `gypx`)
+
 
 ## Train
 ```bash
