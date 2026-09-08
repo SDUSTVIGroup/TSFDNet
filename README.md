@@ -14,23 +14,33 @@ This repository provides the code for the method in our paper '**Text-Semantics 
 
 ## Environment setup
 
-TS-FDNet requires a CUDA-enabled GPU. Create a Python environment, install a PyTorch/torchvision build compatible with your CUDA version, and then install the remaining dependencies:
+TS-FDNet requires a CUDA-enabled GPU. The recorded environment uses
+Python 3.10.19, PyTorch 2.6.0, and torchvision 0.21.0 with CUDA 12.4 builds.
+Package versions are provided in [requirements.txt](requirements.txt).
+
+Clone the repository and create the Python environment:
 
 ```bash
 git clone https://github.com/SDUSTVIGroup/TSFDNet.git
 cd TSFDNet
 
-conda create -n tsfdnet python=3.10 -y
+conda create -n tsfdnet python=3.10.19 -y
 conda activate tsfdnet
-
-# Install PyTorch and torchvision according to your CUDA version:
-# https://pytorch.org/get-started/locally/
-
-pip install numpy scipy scikit-image matplotlib opencv-python tensorboard tensorboardX timm
-pip install causal-conv1d mamba-ssm
-pip install git+https://github.com/openai/CLIP.git
 ```
 
+Install PyTorch and torchvision:
+
+```bash
+python -m pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+```
+
+Install the remaining dependencies, including OpenAI CLIP at the commit
+specified in requirements.txt:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip check
+```
 
 ## Data preparation
 
