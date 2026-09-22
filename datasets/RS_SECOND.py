@@ -70,8 +70,8 @@ def normalize_images(imgs, time='A'):
 def read_RSimages(mode, rescale=False):
     img_A_dir = os.path.join(root, mode, 'im1')
     img_B_dir = os.path.join(root, mode, 'im2')
-    label_A_dir = os.path.join(root, mode, 'label1_idx')
-    label_B_dir = os.path.join(root, mode, 'label2_idx')
+    label_A_dir = os.path.join(root, mode, 'label1')
+    label_B_dir = os.path.join(root, mode, 'label2')
 
     data_list = os.listdir(img_A_dir)
     imgs_list_A, imgs_list_B, labels_A, labels_B = [], [], [], []
