@@ -109,7 +109,7 @@ python train_TSFDNet.py
 
 ## Checkpoint
 
-- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1sW-WgOfNvPb3HVh4LSOtwA?pwd=rprp) (extraction code: `rprp`)
+- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1O_pX-KkmlK0WVIJ6vKocEg) (extraction code: `51cv`)
 
 ## Inference
 
