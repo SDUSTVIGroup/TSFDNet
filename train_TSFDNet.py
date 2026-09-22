@@ -185,6 +185,39 @@ def train(train_loader, net, criterion, optimizer, scheduler, val_loader):
         scheduler.step()
 
 
+def _forward_tta(net, imgs_A, imgs_B):
+    """Average aligned logits from original, horizontal, vertical and combined flips."""
+    def run(a, b):
+        res = net(a, b)
+        oc, oa, ob = res[0], res[1], res[2]
+        if isinstance(oc, list):
+            oc = oc[0]
+        return oc, oa, ob
+
+    oc0, oa0, ob0 = run(imgs_A, imgs_B)
+
+    oc1, oa1, ob1 = run(torch.flip(imgs_A, [3]), torch.flip(imgs_B, [3]))
+    oc1 = torch.flip(oc1, [3])
+    oa1 = torch.flip(oa1, [3])
+    ob1 = torch.flip(ob1, [3])
+
+    oc2, oa2, ob2 = run(torch.flip(imgs_A, [2]), torch.flip(imgs_B, [2]))
+    oc2 = torch.flip(oc2, [2])
+    oa2 = torch.flip(oa2, [2])
+    ob2 = torch.flip(ob2, [2])
+
+    oc3, oa3, ob3 = run(torch.flip(imgs_A, [2, 3]), torch.flip(imgs_B, [2, 3]))
+    oc3 = torch.flip(oc3, [2, 3])
+    oa3 = torch.flip(oa3, [2, 3])
+    ob3 = torch.flip(ob3, [2, 3])
+
+    out_change = (oc0 + oc1 + oc2 + oc3) / 4.0
+    outputs_A = (oa0 + oa1 + oa2 + oa3) / 4.0
+    outputs_B = (ob0 + ob1 + ob2 + ob3) / 4.0
+
+    return out_change, outputs_A, outputs_B
+
+
 def validate(val_loader, net, criterion, curr_epoch):
     net.eval()
     torch.cuda.empty_cache()
@@ -202,24 +235,7 @@ def validate(val_loader, net, criterion, curr_epoch):
         labels_bn = (labels_A>0).unsqueeze(1).float().cuda()
 
         with torch.no_grad():
-            res = net(imgs_A, imgs_B)
-            out_change = res[0]
-            outputs_A = res[1]
-            outputs_B = res[2]
-            if isinstance(out_change, list): out_change = out_change[0]
-
-            # TTA: horizontal flip
-            imgs_A_flip = torch.flip(imgs_A, [3])
-            imgs_B_flip = torch.flip(imgs_B, [3])
-            res_flip = net(imgs_A_flip, imgs_B_flip)
-            out_change_flip = res_flip[0]
-            outputs_A_flip = res_flip[1]
-            outputs_B_flip = res_flip[2]
-            if isinstance(out_change_flip, list): out_change_flip = out_change_flip[0]
-
-            out_change = (out_change + torch.flip(out_change_flip, [3])) / 2
-            outputs_A = (outputs_A + torch.flip(outputs_A_flip, [3])) / 2
-            outputs_B = (outputs_B + torch.flip(outputs_B_flip, [3])) / 2
+            out_change, outputs_A, outputs_B = _forward_tta(net, imgs_A, imgs_B)
 
             loss_A = criterion(outputs_A*labels_bn, labels_A)
             loss_B = criterion(outputs_B*labels_bn, labels_B)
