@@ -1,17 +1,13 @@
 import os
 import numpy as np
 import torch
+import random
 from skimage import io
 from torch.utils import data
-import utils.transform as transform
 import matplotlib.pyplot as plt
-from skimage.transform import rescale
 from torchvision.transforms import functional as F
+# from osgeo import gdal_array
 import cv2
-import torchvision.transforms as T
-import random
-import albumentations as A
-from PIL import Image
 
 num_classes = 6
 ST_COLORMAP = [[255,255,255], [0,128,0], [255,0,0], [0,255,0], [128,0,0], [128,128,128]]
@@ -39,7 +35,7 @@ def Color2Index(ColorLabel):
     data = ColorLabel.astype(np.int32)
     idx = (data[:, :, 0] * 256 + data[:, :, 1]) * 256 + data[:, :, 2]
     IndexMap = colormap2label[idx]
-
+    #IndexMap = 2*(IndexMap > 1) + 1 * (IndexMap <= 1)
     IndexMap = IndexMap * (IndexMap < num_classes)
     return IndexMap
 
@@ -55,7 +51,6 @@ def showIMG(img):
 
 def normalize_image(im, time='A'):
     assert time in ['A', 'B']
-    im = im.astype(np.float32)
     if time=='A':
         im = (im - MEAN_A) / STD_A
     else:
@@ -67,17 +62,22 @@ def normalize_images(imgs, time='A'):
         imgs[i] = normalize_image(im, time)
     return imgs
 
-def read_RSimages(mode, rescale=False):
+def read_RSimages(mode):
+    #assert mode in ['train', 'val', 'test']
     img_A_dir = os.path.join(root, mode, 'im1')
     img_B_dir = os.path.join(root, mode, 'im2')
     label_A_dir = os.path.join(root, mode, 'label1')
     label_B_dir = os.path.join(root, mode, 'label2')
+    # To use rgb labels:
+    #label_A_dir = os.path.join(root, mode, 'label1_rgb')
+    #label_B_dir = os.path.join(root, mode, 'label2_rgb')
 
     data_list = os.listdir(img_A_dir)
     imgs_list_A, imgs_list_B, labels_A, labels_B = [], [], [], []
     count = 0
     for it in data_list:
-        if (it[-4:]=='.png'):
+        # print(it)
+        if (it[-4:]=='.tif'):
             img_A_path = os.path.join(img_A_dir, it)
             img_B_path = os.path.join(img_B_dir, it)
             label_A_path = os.path.join(label_A_dir, it.replace('.tif','.png'))
@@ -88,97 +88,161 @@ def read_RSimages(mode, rescale=False):
 
             label_A = io.imread(label_A_path)
             label_B = io.imread(label_B_path)
-
+            #for rgb labels:
+            # label_A = Color2Index(label_A)
+            # label_B = Color2Index(label_B)
             labels_A.append(label_A)
             labels_B.append(label_B)
         count+=1
         if not count%500: print('%d/%d images loaded.'%(count, len(data_list)))
-
     print(labels_A[0].shape)
     print(str(len(imgs_list_A)) + ' ' + mode + ' images' + ' loaded.')
 
     return imgs_list_A, imgs_list_B, labels_A, labels_B
 
+def photometric_augment(img, p=0.8):
+    """
+    img: float32 HWC image, typically in the 0-255 range before normalization.
+    """
+    if random.random() > p:
+        return img
+    out = img.copy()
+    # 1) brightness/contrast
+    if random.random() < 0.7:
+        alpha = random.uniform(0.9, 1.1)     # contrast
+        beta  = random.uniform(-8, 8)      # brightness
+        out = out * alpha + beta
+    # 2) gamma
+    if random.random() < 0.3:
+        gamma = random.uniform(0.95, 1.05)
+        out = np.clip(out, 0, 255) / 255.0
+        out = (out ** gamma) * 255.0
+    if random.random() < 0.3:
+        ch_scale = np.array([
+            random.uniform(0.95, 1.01),
+            random.uniform(0.95, 1.01),
+            random.uniform(0.95, 1.01),
+        ], dtype=np.float32)
+        out = out * ch_scale
+    # 4) Gaussian noise
+    if random.random() < 0.15:
+        sigma = random.uniform(1.0, 3.0)
+        noise = np.random.normal(0, sigma, out.shape).astype(np.float32)
+        out = out + noise
+    # 5) blur
+    if random.random() < 0.1:
+        k = random.choice([3, 5])
+        out = cv2.GaussianBlur(out, (k, k), 0)
+    return np.clip(out, 0, 255).astype(np.float32)
+
+def change_aware_crop(img_A, img_B, label_A, label_B, crop_h, crop_w, num_trials=10):
+    h, w = img_A.shape[:2]
+
+    if h == crop_h and w == crop_w:
+        return img_A, img_B, label_A, label_B
+    change_mask = (label_A != label_B).astype(np.uint8)
+    best_h = 0
+    best_w = 0
+    best_score = -1.0
+    for _ in range(num_trials):
+        sh = random.randint(0, h - crop_h)
+        sw = random.randint(0, w - crop_w)
+        crop_change = change_mask[sh:sh + crop_h, sw:sw + crop_w]
+        score = crop_change.mean()
+        if score > best_score:
+            best_score = score
+            best_h = sh
+            best_w = sw
+
+    img_A = img_A[best_h:best_h + crop_h, best_w:best_w + crop_w]
+    img_B = img_B[best_h:best_h + crop_h, best_w:best_w + crop_w]
+    label_A = label_A[best_h:best_h + crop_h, best_w:best_w + crop_w]
+    label_B = label_B[best_h:best_h + crop_h, best_w:best_w + crop_w]
+
+    return img_A, img_B, label_A, label_B
+
+def joint_augment(img_A, img_B, label_A, label_B, p=0.5):
+    h, w = img_A.shape[:2]
+
+    if random.random() < p:
+        scale = random.uniform(0.9, 1.1)
+        new_h, new_w = int(h * scale), int(w * scale)
+
+        img_A = cv2.resize(img_A, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        img_B = cv2.resize(img_B, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        label_A = cv2.resize(label_A, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+        label_B = cv2.resize(label_B, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+
+        if scale > 1.0:
+
+            img_A, img_B, label_A, label_B = change_aware_crop(
+                img_A, img_B, label_A, label_B, h, w, num_trials=10
+            )
+        else:
+
+            pad_h = max(0, h - new_h)
+            pad_w = max(0, w - new_w)
+
+            img_A = cv2.copyMakeBorder(img_A, 0, pad_h, 0, pad_w, cv2.BORDER_REFLECT)
+            img_B = cv2.copyMakeBorder(img_B, 0, pad_h, 0, pad_w, cv2.BORDER_REFLECT)
+
+            label_A = cv2.copyMakeBorder(label_A, 0, pad_h, 0, pad_w, cv2.BORDER_REPLICATE)
+            label_B = cv2.copyMakeBorder(label_B, 0, pad_h, 0, pad_w, cv2.BORDER_REPLICATE)
+
+            img_A = img_A[:h, :w]
+            img_B = img_B[:h, :w]
+            label_A = label_A[:h, :w]
+            label_B = label_B[:h, :w]
+
+    if random.random() < 0.5:
+        img_A = np.fliplr(img_A)
+        img_B = np.fliplr(img_B)
+        label_A = np.fliplr(label_A)
+        label_B = np.fliplr(label_B)
+
+    k = random.randint(0, 3)
+    if k > 0:
+        img_A = np.rot90(img_A, k)
+        img_B = np.rot90(img_B, k)
+        label_A = np.rot90(label_A, k)
+        label_B = np.rot90(label_B, k)
+
+    swapped = False
+
+    img_A = photometric_augment(img_A, p=0.6)
+    img_B = photometric_augment(img_B, p=0.6)
+
+    return img_A.copy(), img_B.copy(), label_A.copy(), label_B.copy(), swapped
+
 class Data(data.Dataset):
-    def __init__(self, mode, random_flip=False):
-        self.mode = mode
-        self.random_flip = random_flip
+    def __init__(self, mode, augment=False):
+        self.augment = augment
         self.imgs_list_A, self.imgs_list_B, self.labels_A, self.labels_B = read_RSimages(mode)
-
-        self.crop_size = 512
-
-        # Apply the same geometric transform to both images and both masks.
-        self.geo_transform = A.Compose([
-
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
-            A.RandomRotate90(p=0.5),
-
-            A.OneOf([
-                A.ElasticTransform(alpha=120, sigma=6, p=0.5),
-                A.GridDistortion(num_steps=5, distort_limit=0.3, p=0.5),
-                A.OpticalDistortion(distort_limit=0.2, p=0.5),
-            ], p=0.3),
-
-            A.Resize(height=self.crop_size, width=self.crop_size, interpolation=cv2.INTER_LINEAR, mask_interpolation=cv2.INTER_NEAREST),
-        ],
-
-        additional_targets={'image_b': 'image', 'mask_b': 'mask'})
-
-        self.photo_transform = A.Compose([
-
-            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1, p=0.5),
-
-            A.GaussNoise(std_range=(0.02, 0.08),  mean_range=(0.0, 0.0), p=0.3),
-
-            A.OneOf([
-                A.MotionBlur(blur_limit=3, p=0.2),
-                A.MedianBlur(blur_limit=3, p=0.1),
-                A.Blur(blur_limit=3, p=0.1),
-            ], p=0.1),
-
-            A.ToGray(p=0.1),
-
-        ])
-
-        self.shared_color_aug = A.ColorJitter(
-            brightness=0.15, contrast=0.15, saturation=0.15, hue=0.05, p=1
-        )
 
     def get_mask_name(self, idx):
         mask_name = os.path.split(self.imgs_list_A[idx])[-1]
         return mask_name
 
     def __getitem__(self, idx):
+        img_A = io.imread(self.imgs_list_A[idx]).astype(np.float32)
+        img_B = io.imread(self.imgs_list_B[idx]).astype(np.float32)
+        label_A = self.labels_A[idx].copy()
+        label_B = self.labels_B[idx].copy()
 
-        img_A = io.imread(self.imgs_list_A[idx])
-        img_B = io.imread(self.imgs_list_B[idx])
-        label_A = self.labels_A[idx]
-        label_B = self.labels_B[idx]
+        if self.augment:
+            img_A, img_B, label_A, label_B, swapped = joint_augment(img_A, img_B, label_A, label_B)
+        else:
+            swapped = False
 
-        if self.random_flip:
+        if swapped:
+            img_A = normalize_image(img_A, 'B')
+            img_B = normalize_image(img_B, 'A')
+        else:
+            img_A = normalize_image(img_A, 'A')
+            img_B = normalize_image(img_B, 'B')
 
-            transformed = self.geo_transform(image=img_A, image_b=img_B, mask=label_A, mask_b=label_B)
-            img_A = transformed['image']
-            img_B = transformed['image_b']
-            label_A = transformed['mask']
-            label_B = transformed['mask_b']
-
-            # Sample photometric augmentation independently for each timestamp.
-            img_A = self.photo_transform(image=img_A)['image']
-            img_B = self.photo_transform(image=img_B)['image']
-
-        elif self.mode != 'train':
-
-             resizer = A.Resize(height=self.crop_size, width=self.crop_size)
-             transformed = resizer(image=img_A, image_b=img_B, mask=label_A, mask_b=label_B)
-             img_A, img_B = transformed['image'], transformed['image_b']
-             label_A, label_B = transformed['mask'], transformed['mask_b']
-
-        # Use timestamp-specific normalization statistics.
-        img_A = normalize_image(img_A, 'A')
-        img_B = normalize_image(img_B, 'B')
-
+        label_A = label_A.astype(np.int64)
+        label_B = label_B.astype(np.int64)
         return F.to_tensor(img_A).float(), F.to_tensor(img_B).float(), torch.from_numpy(label_A).long(), torch.from_numpy(label_B).long()
 
     def __len__(self):
@@ -186,31 +250,31 @@ class Data(data.Dataset):
 
 class Data_test(data.Dataset):
     def __init__(self, test_dir):
-        self.imgs_A = []
-        self.imgs_B = []
+        self.imgs_list_A = []
+        self.imgs_list_B = []
         self.mask_name_list = []
         imgA_dir = os.path.join(test_dir, 'im1')
         imgB_dir = os.path.join(test_dir, 'im2')
         data_list = os.listdir(imgA_dir)
         for it in data_list:
-            if (it[-4:]=='.png'):
-                img_A_path = os.path.join(imgA_dir, it)
-                img_B_path = os.path.join(imgB_dir, it)
-                self.imgs_A.append(io.imread(img_A_path))
-                self.imgs_B.append(io.imread(img_B_path))
+            if (it[-4:]=='.tif'):
+                self.imgs_list_A.append(os.path.join(imgA_dir, it))
+                self.imgs_list_B.append(os.path.join(imgB_dir, it))
                 self.mask_name_list.append(it)
-        self.len = len(self.imgs_A)
+        self.len = len(self.imgs_list_A)
 
     def get_mask_name(self, idx):
         return self.mask_name_list[idx]
 
     def __getitem__(self, idx):
-        img_A = self.imgs_A[idx]
-        img_B = self.imgs_B[idx]
-        # Use timestamp-specific normalization statistics.
+        img_A = io.imread(self.imgs_list_A[idx]).astype(np.float32)
+        img_B = io.imread(self.imgs_list_B[idx]).astype(np.float32)
+        if img_A.max() > 255 or img_B.max() > 255:
+            img_A = (img_A - img_A.min()) / (img_A.max() - img_A.min() + 1e-8) * 255.0
+            img_B = (img_B - img_B.min()) / (img_B.max() - img_B.min() + 1e-8) * 255.0
         img_A = normalize_image(img_A, 'A')
         img_B = normalize_image(img_B, 'B')
-        return F.to_tensor(img_A), F.to_tensor(img_B)
+        return F.to_tensor(img_A).float(), F.to_tensor(img_B).float()
 
     def __len__(self):
         return self.len
