@@ -1,6 +1,7 @@
 import os
 import time
 import random
+import copy
 import numpy as np
 import torch
 import torch.nn as nn
@@ -46,13 +47,39 @@ args = {
     'pred_dir': os.path.join(os.getcwd(), 'results', DATA_NAME),
     'chkpt_dir': os.path.join(os.getcwd(), 'checkpoints', DATA_NAME),
     'log_dir': os.path.join(os.getcwd(), 'logs', DATA_NAME, NET_NAME),
-    'load_path': "/home/zhj/TSFDNet/backbone_weights.pth"
+    'load_path': "/home/zhj/TSFDNet/backbone_weights.pth",
+    'ema_decay': 0.999,
+    'ema_start_epoch': 0
 }
 
 os.makedirs(args['log_dir'], exist_ok=True)
 os.makedirs(args['pred_dir'], exist_ok=True)
 os.makedirs(args['chkpt_dir'], exist_ok=True)
 writer = SummaryWriter(args['log_dir'])
+
+class ModelEMA:
+    """Maintain EMA weights with the same state_dict keys as the training model."""
+
+    def __init__(self, model, decay=0.999):
+        self.decay = decay
+        self.shadow = {
+            k: v.detach().clone().float() if v.dtype.is_floating_point else v.detach().clone()
+            for k, v in model.state_dict().items()
+        }
+
+    @torch.no_grad()
+    def update(self, model):
+        for k, v in model.state_dict().items():
+            if v.dtype.is_floating_point:
+                self.shadow[k].mul_(self.decay).add_(v.detach().float(), alpha=1.0 - self.decay)
+            else:
+                self.shadow[k] = v.detach().clone()
+
+    @torch.no_grad()
+    def copy_to(self, model):
+        state = model.state_dict()
+        model.load_state_dict({k: self.shadow[k].to(state[k].dtype) for k in state}, strict=True)
+
 
 def main():
     print(f"\nClasses: {RS.ST_CLASSES}\n")
@@ -97,11 +124,13 @@ def main():
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args['epochs'], eta_min=1e-6)
 
-    train(train_loader, net, criterion, optimizer, scheduler, val_loader)
+    # Initialize after loading pretrained weights; preserve DataParallel keys.
+    ema = ModelEMA(net, decay=args['ema_decay'])
+    train(train_loader, net, criterion, optimizer, scheduler, val_loader, ema)
     writer.close()
     print('Training finished.')
 
-def train(train_loader, net, criterion, optimizer, scheduler, val_loader):
+def train(train_loader, net, criterion, optimizer, scheduler, val_loader, ema):
     bestaccT = bestaccV = 0
     bestFscdV = 0.0
     bestloss = 1.0
@@ -142,6 +171,8 @@ def train(train_loader, net, criterion, optimizer, scheduler, val_loader):
             loss.backward()
             torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
             optimizer.step()
+            if curr_epoch >= args['ema_start_epoch']:
+                ema.update(net)
 
             
             outputs_A = outputs_A.cpu().detach()
@@ -172,15 +203,22 @@ def train(train_loader, net, criterion, optimizer, scheduler, val_loader):
                     (curr_epoch, i+1, len(train_loader), time.time()-start, optimizer.param_groups[0]['lr'],
                     train_seg_loss.val, train_bn_loss.val, train_sc_loss.val, acc_meter.val*100))
 
-        
-        Fscd_v, mIoU_v, Sek_v, acc_v, loss_v = validate(val_loader, net, criterion, curr_epoch)
+        if curr_epoch >= args['ema_start_epoch']:
+            eval_net = copy.deepcopy(net)
+            ema.copy_to(eval_net)
+            Fscd_v, mIoU_v, Sek_v, acc_v, loss_v = validate(val_loader, eval_net, criterion, curr_epoch)
+            if curr_epoch == args['ema_start_epoch'] or Fscd_v>bestFscdV:
+                bestFscdV=Fscd_v
+                bestaccV=acc_v
+                bestloss=loss_v
+                # Keep the original filename and plain model state_dict format.
+                torch.save(eval_net.state_dict(), os.path.join(args['chkpt_dir'],
+                    f"{NET_NAME}_{curr_epoch}e.pth"))
+            del eval_net
+        else:
+            # Preserve one validation/log entry per epoch before EMA starts.
+            validate(val_loader, net, criterion, curr_epoch)
         if acc_meter.avg>0: bestaccT=acc_meter.avg
-        if Fscd_v>bestFscdV:
-            bestFscdV=Fscd_v
-            bestaccV=acc_v
-            bestloss=loss_v
-            torch.save(net.state_dict(), os.path.join(args['chkpt_dir'],
-                f"{NET_NAME}_{curr_epoch}e.pth"))
 
         print('Total time: %.1fs Best Train acc %.2f, Val Fscd %.2f acc %.2f loss %.4f' %
             (time.time()-begin_time, bestaccT*100, bestFscdV*100, bestaccV*100, bestloss))
