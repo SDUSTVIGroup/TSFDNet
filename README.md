@@ -57,11 +57,6 @@ Taking training the SECOND dataset as an example, split the SCD data into traini
 >    - im2
 >    - label1
 >    - label2
->  - test
->    - im1
->    - im2
->    - label1
->    - label2
     
 If the downloaded SECOND annotations are RGB color masks, either convert them to single-channel index masks before training or enable `Color2Index` in `datasets/RS_SECOND.py` for both `label1` and `label2`.
 
@@ -107,9 +102,9 @@ Run the command from the repository root:
 python train_TSFDNet.py 
 ```
 
-## Checkpoint
+## Checkpoints and TensorBoard logs
 
-- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1QHstZN-kF8lD5GqF2C29rw?pwd=kvxd) (extraction code: `kvxd`)
+- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1Hau0h0oFsmosgAFtFf8xuQ?pwd=emc2) (extraction code: `emc2`)
 
 ## Inference
 
