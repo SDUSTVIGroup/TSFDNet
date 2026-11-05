@@ -102,9 +102,9 @@ Run the command from the repository root:
 python train_TSFDNet.py 
 ```
 
-## Checkpoints and TensorBoard logs
+## Checkpoints and Logs
 
-- **TS-FDNet checkpoint**：[Baidu Netdisk](https://pan.baidu.com/s/1Hau0h0oFsmosgAFtFf8xuQ?pwd=emc2) (extraction code: `emc2`)
+- **Checkpoints and Logs**：[Baidu Netdisk](https://pan.baidu.com/s/1shFaeBlyp5DygGjgkWJW5w?pwd=sye3) (extraction code: `sye3`)
 
 ## Inference
 
